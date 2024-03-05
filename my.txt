@@ -1,6 +1,4 @@
-
-
-www.4chan.org:80
+www.4chan.org
 raw.githubusercontent.com/tower99/v/main/my.txt
 xn--b6gac.eu.org
 www.whatismyip.com
@@ -83,9 +81,6 @@ cdn.shanggan.pp.ua
 hk.100366.xyz
 sp.rweek.top
 cip.951535.xyz
-
-
-
 
 
 
