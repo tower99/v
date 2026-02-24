@@ -1,0 +1,85 @@
+# ====== 基础 ======
+mixed-port: 7890
+allow-lan: true
+mode: rule
+log-level: info
+external-controller: ":9090"
+
+# ====== DNS======
+dns:
+  enable: true
+  listen: 0.0.0.0:1053
+  ipv6: true
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+  fallback:
+    - 1.1.1.1
+    - 8.8.8.8
+  fallback-filter:
+    geoip: true
+    geoip-code: CN
+    ipcidr:
+      - 240.0.0.0/4
+  fake-ip-filter:
+    - "*.lan"
+    - "localhost"
+    - "time.*"
+    - "time-ios.apple.com"
+    - "time.apple.com"
+    - "ntp.*"
+    - "captive.apple.com"
+
+# ====== 节点订阅作为 provider ======
+proxy-providers:
+  go4sharing:
+    type: http
+    url: "https://raw.githubusercontent.com/go4sharing/sub/main/sub.yaml"
+    interval: 3600
+    path: ./proxy_providers/go4sharing.yaml
+    health-check:
+      enable: true
+      url: "http://www.gstatic.com/generate_204"
+      interval: 300
+
+# ====== 策略组 ======
+proxy-groups:
+  - name: "Proxy"
+    type: select
+    use:
+      - go4sharing
+    proxies:
+      - DIRECT
+
+  - name: "Auto"
+    type: url-test
+    use:
+      - go4sharing
+    url: "http://www.gstatic.com/generate_204"
+    interval: 300
+    tolerance: 50
+
+  # 可选：一个总开关，方便 UI 里切
+  - name: "Main"
+    type: select
+    proxies:
+      - Proxy
+      - Auto
+      - DIRECT
+
+# ====== 规则======
+rules:
+  # 指定网站走直连，就往上面加：
+  - DOMAIN-SUFFIX,bbs.kanxue.com,DIRECT
+
+  # 常见：广告拒绝（可按需加）
+  - DOMAIN-KEYWORD,adservice,REJECT
+  - DOMAIN-SUFFIX,doubleclick.net,REJECT
+
+  # 国内直连（简单兜底）
+  - GEOIP,CN,DIRECT
+
+  # 其余全部走代理
+  - MATCH,Proxy
